@@ -1,18 +1,21 @@
 import React, { Component } from 'react';
 //import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
+
 import { Button, Form, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
 
 const formFieldsArr = [
     {
-        label: "Name", type: "text", placeholder: "name", name: "Name"
+        label: "Name", type: "text", placeholder: "name", name: "name"
     },
     {
-        label: "Email", type: "email", placeholder: "email", name: "Email"
+        label: "Email", type: "email", placeholder: "email", name: "email"
     },
     {
-        label: "Due Date", type: "date", placeholder: "date", name: "DueDate"
+        label: "Due Date", type: "date", placeholder: "date", name: "dueDate"
     }
 ];
+
 
 const staticFormFields = (onChangeText) => formFieldsArr.map((formField) => {
     return (
@@ -21,17 +24,12 @@ const staticFormFields = (onChangeText) => formFieldsArr.map((formField) => {
                 {formField.label}
             </Col>
             <Col xs={10} sm={10} md={10} lg={10}>
-                <FormControl type={formField.type} placeholder={formField.placeholder} onChange={(e) => onChangeText(formField.label, e.target.value)} />
+                <FormControl type={formField.type} placeholder={formField.placeholder} onChange={(e) => onChangeText(formField.name, e.target.value)} />
             </Col>
         </FormGroup>
     )
-})
+});
 
-const formInstance = (onChangeText) => (
-    <div>
-        {staticFormFields(onChangeText)}
-    </div>
-);
 
 class LineItem extends Component {
 
@@ -62,22 +60,46 @@ class Invoice extends Component {
         this.onChangeText = this.onChangeText.bind(this);
         this.handleChangeLineItem = this.handleChangeLineItem.bind(this);
         this.addLineItem = this.addLineItem.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     onChangeText(label, text) {
-        this.setState({
-            label: text
-        });
+        var newState = {}
+        newState[label] = text;
+        this.setState(newState);
         console.log(`Setting ${label} to `, text);
     }
     //TODO
     handleSubmit() {
+        fetch("http://localhost:8080/api/v1/invoices", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customer:
+                {
+                    id: `${this.state.name}${this.state.email}`,
+                    name: this.state.name,
+                    email: this.state.email
+                },
+                invoice:
+                {
+                    totalAmount: this.calculateTotal(),
+                    dueDate: this.state.dueDate
+                },
+                lineItems: this.state.lineItems
+            })
+        })
+            .then(resp => { console.log(resp.json()) })
+            .catch(console.error);
 
     }
     handleChangeLineItem(key, field, value) {
         this.setState({
             lineItems: this.state.lineItems.map(lineItem => {
                 if (lineItem.key === key) {
+                    if (key === "amount") {
+                        value = parseFloat(value);
+                    }
                     lineItem[field] = value
                 }
                 return lineItem
@@ -86,6 +108,7 @@ class Invoice extends Component {
     }
 
     randomStr = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    calculateTotal = () => this.state.lineItems.reduce((p, t) => p + parseFloat(t.amount), 0)
 
     addLineItem() {
         this.setState({
@@ -105,7 +128,7 @@ class Invoice extends Component {
             <Grid>
                 <PageHeader>E-Invoice</PageHeader>
                 <Form horizontal>
-                    {formInstance(this.onChangeText)}
+                    {staticFormFields(this.onChangeText)}
                     <FormGroup>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Description</Col>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Amount</Col>
@@ -125,12 +148,12 @@ class Invoice extends Component {
                     </FormGroup>
                     <FormGroup>
                         <Col smOffset={10} sm={2}>
-                            <h3>Total: ${this.state.lineItems.reduce((p, t) => p + parseFloat(t.amount), 0)}</h3>
+                            <h3>Total: {this.calculateTotal()}</h3>
                         </Col>
                     </FormGroup>
                     <FormGroup>
                         <Col smOffset={10} sm={2}>
-                            <Button type="submit">Send</Button>
+                            <Button onClick={this.handleSubmit}>Send</Button>
                         </Col>
                     </FormGroup>
                 </Form>
