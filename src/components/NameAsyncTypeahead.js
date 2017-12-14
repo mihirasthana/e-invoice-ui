@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 
 class NameAsyncTypeahead extends React.Component {

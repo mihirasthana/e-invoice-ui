@@ -1,16 +1,13 @@
 import React, { Component } from 'react';
 //import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
+import LineItem from './LineItem'
+//import PropTypes from 'prop-types';
 import NameAsyncTypeahead from './NameAsyncTypeahead'
-
-
-//TODO PropTypes Validation
 import { Button, Form, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
+//TODO PropTypes Validation
+
 
 const formFieldsArr = [
-    // {
-    //     label: "Name", type: "text", placeholder: "name", name: "name"
-    // },
     {
         label: "Email", type: "email", placeholder: "email", name: "email"
     },
@@ -34,23 +31,6 @@ const staticFormFields = (onChangeText) => formFieldsArr.map((formField) => {
 });
 
 
-class LineItem extends Component {
-
-    render() {
-        return <FormGroup key={this.props.idx} controlId={`${this.props.idx}`} >
-            <Col smOffset={2} sm={7} md={7} xs={7} lg={7}>
-                <FormControl type="text" placeholder="description" value={this.props.description} onChange={(e) => this.props.onChange("description", e.target.value)} />
-            </Col>
-            <Col sm={2} md={2} xs={2} lg={2}>
-                <FormControl type="number" placeholder="amount" value={this.props.amount} onChange={(e) => this.props.onChange("amount", e.target.value)} />
-            </Col>
-            <Col sm={1} md={1} xs={1} lg={1}>
-                <Button bsStyle="danger" onClick={this.props.onDelete}> <Glyphicon glyph="remove" /> </Button>
-            </Col>
-        </FormGroup>
-    }
-}
-
 class Invoice extends Component {
     constructor(props) {
         super(props);
@@ -64,6 +44,7 @@ class Invoice extends Component {
         this.handleChangeLineItem = this.handleChangeLineItem.bind(this);
         this.addLineItem = this.addLineItem.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleClearForm = this.handleClearForm.bind(this);
     }
 
     onChangeText(label, text) {
@@ -72,8 +53,8 @@ class Invoice extends Component {
         this.setState(newState);
         console.log(`Setting ${label} to `, text);
     }
-    //TODO
-    handleSubmit() {
+
+    handleSubmit(e) {
         fetch("http://localhost:8080/api/v1/invoices", {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
@@ -92,7 +73,12 @@ class Invoice extends Component {
                 lineItems: this.state.lineItems
             })
         })
-            .then(resp => { console.log(resp.json()) })
+            .then(resp => {
+                console.log(resp.json())
+                alert("Success!!");
+                this.handleClearForm(e)
+
+            })
             .catch(console.error);
 
     }
@@ -113,6 +99,16 @@ class Invoice extends Component {
     randomStr = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     calculateTotal = () => this.state.lineItems.reduce((p, t) => p + parseFloat(t.amount), 0)
 
+    handleClearForm(e) {
+        //e.preventDefault();
+        this.setState({
+            name: "",
+            email: "",
+            dueDate: "",
+            lineItems: [{ key: this.randomStr(), description: "", "amount": 0.0 }]
+        });
+    }
+
     addLineItem() {
         this.setState({
             lineItems: [...this.state.lineItems, {
@@ -126,6 +122,7 @@ class Invoice extends Component {
             lineItems: this.state.lineItems.filter((lineItem) => lineItem.key !== key)
         });
     }
+
     render() {
         return (
             <Grid>
