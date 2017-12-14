@@ -31,11 +31,26 @@ function validateEmail(email) {
     return { validationState, error }
 }
 
+function validateDate(dueDate) {
+    console.log(dueDate)
+    let error = ""
+    let validationState = 'error'
+    if (dueDate.length < 1) {
+        error = "Please enter a date";
+    }
+    else {
+        validationState = 'success'
+    }
+    return { error, validationState }
+}
 const validateAmount = (amount) => {
     let validationState = false
     let message = ''
     const amt = parseFloat(amount);
-    if (amt < 0) {
+    if (isNaN(amt)) {
+        message = "Amount is invalid"
+    }
+    else if (amt < 0) {
         message = "Amount can't be negative"
     } else if (amt > 9999999.99) {
         message = "Amount exceeds the limit of 9999999.99"
@@ -71,4 +86,26 @@ const validateLineItem = (lineItem) => {
     }
 }
 
-export { validateEmail, validateName, validateLineItem }
+function allInputValid(state) {
+    const areStaticFormFieldsValid = ["email", "dueDate", "name"].every(
+        (label) => {
+            try {
+                return state[label + "ValidationState"] === 'success'
+            }
+            catch (e) {
+                return false;
+            }
+        }
+    );
+    const areAllLineItemsValid = state.lineItems.every(isLineItemValid);
+    return areAllLineItemsValid && areStaticFormFieldsValid;
+}
+
+function isLineItemValid(lineItem) {
+    try {
+        return Object.values(lineItem.validation.validationStates).every((t) => t);
+    } catch (e) {
+        return false;
+    }
+}
+export { validateEmail, validateName, validateDate, validateLineItem, allInputValid }

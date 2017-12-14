@@ -5,7 +5,7 @@ import LineItem from './LineItem'
 import NameAsyncTypeahead from './NameAsyncTypeahead'
 import { Button, Form, HelpBlock, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
 
-import { validateEmail, validateName, validateLineItem } from '../util/validate'
+import { validateEmail, validateName, validateDate, validateLineItem, allInputValid } from '../util/validate'
 
 //TODO PropTypes Validation
 
@@ -77,6 +77,7 @@ class Invoice extends Component {
             .catch(console.error);
 
     }
+
     handleChangeLineItem(key, field, value) {
         this.setState({
             lineItems: this.state.lineItems.map(lineItem => {
@@ -109,22 +110,7 @@ class Invoice extends Component {
         });
     }
 
-    /*Validation function for date*/
-    validateDate(fieldValue) {
-        // const dateReg = /^((0?[1-9]|1[012])[- /.](0?[1-9]|[12][0-9]|3[01])[- /.](19|20)?[0-9]{2})*$/;
-        let dateError = "";
-        if (fieldValue.length < 1) {
-            dateError = "Please enter a date";
-        }
-        // else if (!dateReg.test(fieldValue)) {
-        //     dateError = "Please enter a valid date";
-        // }
-        this.setState({
-            dateError: dateError,
-            dateValidationState: ''
-        });
-        return (dateError.length < 1);
-    }
+
 
     render() {
         return (
@@ -155,12 +141,13 @@ class Invoice extends Component {
                             <HelpBlock>{this.state.emailError}</HelpBlock>
                         </Col>
                     </FormGroup>
-                    <FormGroup key="dueDate" controlId="formHorizontalDueDate">
+                    <FormGroup key="dueDate" controlId="formHorizontalDueDate" validationState={this.state.dueDateValidationState}>
                         <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
                             Due Date
                         </Col>
                         <Col xs={10} sm={10} md={10} lg={10}>
-                            <FormControl type="date" placeholder="Due Date" value={this.state.dueDate} onChange={(e) => this.onChangeText("dueDate", e.target.value)} />
+                            <FormControl type="date" placeholder="Due Date" value={this.state.dueDate}
+                                onChange={(e) => this.onChangeText("dueDate", validateDate, e.target.value)} />
                             <FormControl.Feedback />
                             <HelpBlock>{this.state.dueDateError}</HelpBlock>
                         </Col>
@@ -194,7 +181,7 @@ class Invoice extends Component {
                     </FormGroup>
                     <FormGroup>
                         <Col smOffset={10} sm={2}>
-                            <Button onClick={this.handleSubmit}>SEND</Button>
+                            <Button disabled={!allInputValid(this.state)} onClick={this.handleSubmit}>SEND</Button>
                         </Col>
                     </FormGroup>
                 </Form>
