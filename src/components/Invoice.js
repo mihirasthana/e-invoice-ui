@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
 //import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
+import NameAsyncTypeahead from './NameAsyncTypeahead'
 
+
+//TODO PropTypes Validation
 import { Button, Form, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
 
 const formFieldsArr = [
-    {
-        label: "Name", type: "text", placeholder: "name", name: "name"
-    },
+    // {
+    //     label: "Name", type: "text", placeholder: "name", name: "name"
+    // },
     {
         label: "Email", type: "email", placeholder: "email", name: "email"
     },
@@ -128,6 +131,15 @@ class Invoice extends Component {
             <Grid>
                 <PageHeader>E-Invoice</PageHeader>
                 <Form horizontal>
+                    <FormGroup key="name" controlId="formHorizontalName">
+                        <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
+                            Name
+                    </Col>
+                        <Col xs={10} sm={10} md={10} lg={10}>
+                            <NameAsyncTypeahead onChange={(text) => this.onChangeText("name", text)}>
+                            </NameAsyncTypeahead>
+                        </Col>
+                    </FormGroup>
                     {staticFormFields(this.onChangeText)}
                     <FormGroup>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Description</Col>
@@ -157,7 +169,7 @@ class Invoice extends Component {
                         </Col>
                     </FormGroup>
                 </Form>
-            </Grid>
+            </Grid >
         );
     }
 }
