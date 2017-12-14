@@ -4,31 +4,9 @@ import LineItem from './LineItem'
 //import PropTypes from 'prop-types';
 import NameAsyncTypeahead from './NameAsyncTypeahead'
 import { Button, Form, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
+
+
 //TODO PropTypes Validation
-
-
-const formFieldsArr = [
-    {
-        label: "Email", type: "email", placeholder: "email", name: "email"
-    },
-    {
-        label: "Due Date", type: "date", placeholder: "date", name: "dueDate"
-    }
-];
-
-
-const staticFormFields = (onChangeText) => formFieldsArr.map((formField) => {
-    return (
-        <FormGroup key={formField.label} controlId={`formHorizontal${formField.name}`}>
-            <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
-                {formField.label}
-            </Col>
-            <Col xs={10} sm={10} md={10} lg={10}>
-                <FormControl type={formField.type} placeholder={formField.placeholder} onChange={(e) => onChangeText(formField.name, e.target.value)} />
-            </Col>
-        </FormGroup>
-    )
-});
 
 
 class Invoice extends Component {
@@ -44,7 +22,6 @@ class Invoice extends Component {
         this.handleChangeLineItem = this.handleChangeLineItem.bind(this);
         this.addLineItem = this.addLineItem.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleClearForm = this.handleClearForm.bind(this);
     }
 
     onChangeText(label, text) {
@@ -54,7 +31,15 @@ class Invoice extends Component {
         console.log(`Setting ${label} to `, text);
     }
 
-    handleSubmit(e) {
+    clearForm() {
+        this.setState({
+            name: "",
+            email: "",
+            dueDate: "",
+            lineItems: [{ key: this.randomStr(), description: "", "amount": 0.0 }],
+        })
+    }
+    handleSubmit() {
         fetch("http://localhost:8080/api/v1/invoices", {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
@@ -75,8 +60,8 @@ class Invoice extends Component {
         })
             .then(resp => {
                 console.log(resp.json())
+                this.clearForm()
                 alert("Success!!");
-                this.handleClearForm(e)
 
             })
             .catch(console.error);
@@ -99,16 +84,6 @@ class Invoice extends Component {
     randomStr = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     calculateTotal = () => this.state.lineItems.reduce((p, t) => p + parseFloat(t.amount), 0)
 
-    handleClearForm(e) {
-        //e.preventDefault();
-        this.setState({
-            name: "",
-            email: "",
-            dueDate: "",
-            lineItems: [{ key: this.randomStr(), description: "", "amount": 0.0 }]
-        });
-    }
-
     addLineItem() {
         this.setState({
             lineItems: [...this.state.lineItems, {
@@ -126,7 +101,7 @@ class Invoice extends Component {
     render() {
         return (
             <Grid>
-                <PageHeader>E-Invoice</PageHeader>
+                <PageHeader>e-Invoice</PageHeader>
                 <Form horizontal>
                     <FormGroup key="name" controlId="formHorizontalName">
                         <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
@@ -137,7 +112,23 @@ class Invoice extends Component {
                             </NameAsyncTypeahead>
                         </Col>
                     </FormGroup>
-                    {staticFormFields(this.onChangeText)}
+
+                    <FormGroup key="email" controlId="formHorizontalEmail">
+                        <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
+                            Email
+                        </Col>
+                        <Col xs={10} sm={10} md={10} lg={10}>
+                            <FormControl type="email" placeholder="email" value={this.state.email} onChange={(e) => this.onChangeText("email", e.target.value)} />
+                        </Col>
+                    </FormGroup>
+                    <FormGroup key="dueDate" controlId="formHorizontalDueDate">
+                        <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
+                            Due Date
+                        </Col>
+                        <Col xs={10} sm={10} md={10} lg={10}>
+                            <FormControl type="date" placeholder="Due Date" value={this.state.dueDate} onChange={(e) => this.onChangeText("dueDate", e.target.value)} />
+                        </Col>
+                    </FormGroup>
                     <FormGroup>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Description</Col>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Amount</Col>
@@ -157,12 +148,12 @@ class Invoice extends Component {
                     </FormGroup>
                     <FormGroup>
                         <Col smOffset={10} sm={2}>
-                            <h3>Total: {this.calculateTotal()}</h3>
+                            <h3>Total: $ {this.calculateTotal()}</h3>
                         </Col>
                     </FormGroup>
                     <FormGroup>
                         <Col smOffset={10} sm={2}>
-                            <Button onClick={this.handleSubmit}>Send</Button>
+                            <Button onClick={this.handleSubmit}>SEND</Button>
                         </Col>
                     </FormGroup>
                 </Form>

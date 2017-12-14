@@ -10,6 +10,7 @@ class NameAsyncTypeahead extends React.Component {
     render() {
         return (
             <AsyncTypeahead
+                align="left"
                 multiple={false}
                 isLoading={this.state.isLoading}
                 onInputChange={this.props.onChange}
@@ -23,6 +24,7 @@ class NameAsyncTypeahead extends React.Component {
                         }));
                 }}
                 options={this.state.options}
+
             />
         );
     }
