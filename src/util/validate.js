@@ -108,4 +108,4 @@ function isLineItemValid(lineItem) {
         return false;
     }
 }
-export { validateEmail, validateName, validateDate, validateLineItem, allInputValid }
+export { validateEmail, validateName, validateDate, validateLineItem, allInputValid, isLineItemValid }

@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
-//import ReactDOM from 'react-dom';
+import { Button, Form, HelpBlock, Row, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
+
 import LineItem from './LineItem'
-//import PropTypes from 'prop-types';
 import NameAsyncTypeahead from './NameAsyncTypeahead'
-import { Button, Form, HelpBlock, PageHeader, FormControl, Col, ControlLabel, FormGroup, Glyphicon, Grid } from 'react-bootstrap';
-
-import { validateEmail, validateName, validateDate, validateLineItem, allInputValid } from '../util/validate'
-
-//TODO PropTypes Validation
+import { validateEmail, validateName, validateDate, validateLineItem, allInputValid, isLineItemValid } from '../util/validate'
 
 
 class Invoice extends Component {
@@ -24,10 +20,12 @@ class Invoice extends Component {
             "emailError": "",
             "dueDateError": "",
         }
-        this.onChangeText = this.onChangeText.bind(this);
-        this.handleChangeLineItem = this.handleChangeLineItem.bind(this);
-        this.addLineItem = this.addLineItem.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this._bind("onChangeText", "handleChangeLineItem", "addLineItem", "handleSubmit")
+    }
+
+    /* Utility method to bind all functions */
+    _bind(...methods) {
+        methods.forEach(method => this[method] = this[method].bind(this));
     }
 
     onChangeText(label, validationFn, text) {
@@ -36,19 +34,16 @@ class Invoice extends Component {
         newState[label] = text;
         newState[label + "Error"] = error;
         newState[label + "ValidationState"] = validationState;
-
         this.setState(newState);
-        console.log(`Setting ${label} to `, text);
     }
 
     clearForm() {
         this.setState({
-            name: "",
-            email: "",
             dueDate: "",
             lineItems: [{ key: this.randomStr(), description: "", "amount": 0.0 }],
         })
     }
+
     handleSubmit() {
         fetch("http://localhost:8080/api/v1/invoices", {
             method: "POST",
@@ -69,12 +64,11 @@ class Invoice extends Component {
             })
         })
             .then(resp => {
-                console.log(resp.json())
                 this.clearForm()
                 alert("Success!!");
 
             })
-            .catch(console.error);
+            .catch((e) => alert(JSON.stringify(e)));
 
     }
 
@@ -82,7 +76,7 @@ class Invoice extends Component {
         this.setState({
             lineItems: this.state.lineItems.map(lineItem => {
                 if (lineItem.key === key) {
-                    if (key === "amount") {
+                    if (field === "amount") {
                         value = parseFloat(value);
                     }
                     lineItem[field] = value;
@@ -94,7 +88,7 @@ class Invoice extends Component {
     }
 
     randomStr = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    calculateTotal = () => this.state.lineItems.reduce((p, t) => p + parseFloat(t.amount), 0)
+    calculateTotal = () => this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + parseFloat(t.amount), 0)
 
     addLineItem() {
         this.setState({
@@ -110,37 +104,55 @@ class Invoice extends Component {
         });
     }
 
+    renderNameForm() {
+        return (
+            <FormGroup key="name" controlId="formHorizontalName" validationState={this.state.nameValidationState}>
+                <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>Name</Col>
+                <Col xs={10} sm={10} md={10} lg={10}>
+                    <NameAsyncTypeahead onChange={(text) => this.onChangeText("name", validateName, text)} />
+                    <FormControl.Feedback />
+                    <HelpBlock>{this.state.nameError}</HelpBlock>
+                </Col>
+            </FormGroup>
+        );
+    }
+    renderEmailForm() {
+        return (
+            <FormGroup key="email" controlId="formHorizontalEmail" validationState={this.state.emailValidationState}>
+                <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>Email</Col>
+                <Col xs={10} sm={10} md={10} lg={10}>
+                    <FormControl type="email" placeholder="email"
+                        value={this.state.email}
+                        onChange={(e) => this.onChangeText("email", validateEmail, e.target.value)} />
+                    <FormControl.Feedback />
+                    <HelpBlock>{this.state.emailError}</HelpBlock>
+                </Col>
+            </FormGroup>
+        );
+    }
 
-
+    renderLineItems() {
+        return (
+            this.state.lineItems.map(
+                lineItem =>
+                    <LineItem
+                        key={lineItem.key}
+                        idx={lineItem.key}
+                        description={lineItem.description}
+                        amount={lineItem.amount}
+                        onDelete={() => this.handleDeleteLineItem(lineItem.key)}
+                        onChange={(field, value) => this.handleChangeLineItem(lineItem.key, field, value)}
+                        {...lineItem.validation }
+                    />
+            ));
+    }
     render() {
         return (
             <Grid>
                 <PageHeader>e-Invoice</PageHeader>
                 <Form horizontal>
-                    <FormGroup key="name" controlId="formHorizontalName" validationState={this.state.nameValidationState}>
-                        <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
-                            Name
-                    </Col>
-                        <Col xs={10} sm={10} md={10} lg={10}>
-                            <NameAsyncTypeahead onChange={(text) => this.onChangeText("name", validateName, text)}>
-                            </NameAsyncTypeahead>
-                            <FormControl.Feedback />
-                            <HelpBlock>{this.state.nameError}</HelpBlock>
-                        </Col>
-                    </FormGroup>
-
-                    <FormGroup key="email" controlId="formHorizontalEmail" validationState={this.state.emailValidationState}>
-                        <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
-                            Email
-                        </Col>
-                        <Col xs={10} sm={10} md={10} lg={10}>
-                            <FormControl type="email" placeholder="email"
-                                value={this.state.email}
-                                onChange={(e) => this.onChangeText("email", validateEmail, e.target.value)} />
-                            <FormControl.Feedback />
-                            <HelpBlock>{this.state.emailError}</HelpBlock>
-                        </Col>
-                    </FormGroup>
+                    {this.renderNameForm()}
+                    {this.renderEmailForm()}
                     <FormGroup key="dueDate" controlId="formHorizontalDueDate" validationState={this.state.dueDateValidationState}>
                         <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
                             Due Date
@@ -152,23 +164,11 @@ class Invoice extends Component {
                             <HelpBlock>{this.state.dueDateError}</HelpBlock>
                         </Col>
                     </FormGroup>
-                    <FormGroup>
+                    <Row>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Description</Col>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Amount</Col>
-                    </FormGroup>
-                    {this.state.lineItems.map(lineItem => {
-
-                        return <LineItem
-                            key={lineItem.key}
-                            idx={lineItem.key}
-                            description={lineItem.description}
-                            amount={lineItem.amount}
-                            onDelete={() => this.handleDeleteLineItem(lineItem.key)}
-                            onChange={(field, value) => this.handleChangeLineItem(lineItem.key, field, value)}
-                            {...lineItem.validation }
-                        />
-                    }
-                    )}
+                    </Row>
+                    {this.renderLineItems()}
                     <FormGroup>
                         <Col smOffset={2} sm={1}>
                             <Button bsStyle="primary" bsSize="large" onClick={this.addLineItem}><Glyphicon glyph="plus" /></Button>
