@@ -3,8 +3,7 @@ import { Button, Form, HelpBlock, Row, PageHeader, FormControl, Col, ControlLabe
 
 import LineItem from './LineItem'
 import NameAsyncTypeahead from './NameAsyncTypeahead'
-import { validateEmail, validateName, validateDate, validateLineItem, allInputValid, isLineItemValid } from '../util/validate'
-
+import { validateEmail, validateName, validateDate, validateLineItem, allInputValid, isLineItemValid } from '../util/Validate'
 
 class Invoice extends Component {
     constructor(props) {
@@ -14,11 +13,23 @@ class Invoice extends Component {
             email: "",
             dueDate: "",
             lineItems: [
-                { key: this.randomStr(), description: "", "amount": 0.0, "error": { "description": "", "amount": "" } }
+                {
+                    key: this.randomStr(),
+                    description: "",
+                    amount: "",
+                    error:
+                    { description: "", amount: "" },
+                    validation: {
+                        "validationStates":
+                        { amount: null, description: null },
+                        "validationMessages":
+                        { amount: "", description: "" }
+                    }
+                }
             ],
             nameError: "",
-            "emailError": "",
-            "dueDateError": "",
+            emailError: "",
+            dueDateError: "",
         }
         this._bind("onChangeText", "handleChangeLineItem", "addLineItem", "handleSubmit")
     }
@@ -39,9 +50,24 @@ class Invoice extends Component {
 
     clearForm() {
         this.setState({
+            email: "",
             dueDate: "",
-            lineItems: [{ key: this.randomStr(), description: "", "amount": 0.0 }],
-
+            lineItems: [{
+                key: this.randomStr(), description: "", "amount": 0.0, error:
+                { description: "", amount: "" },
+                validation: {
+                    "validationStates":
+                    { amount: null, description: null },
+                    "validationMessages":
+                    { amount: "", description: "" }
+                }
+            }],
+            nameError: "",
+            emailError: "",
+            dueDateError: "",
+            emailValidationState: null,
+            dueDateValidationState: null,
+            nameValidationState: 'success'
         })
     }
 
@@ -66,7 +92,7 @@ class Invoice extends Component {
         })
             .then(() => {
                 this.clearForm()
-                alert("Success!!");
+                alert("Invoice created successfully!!");
 
             })
             .catch((e) => alert(JSON.stringify(e)));
@@ -78,7 +104,9 @@ class Invoice extends Component {
             lineItems: this.state.lineItems.map(lineItem => {
                 if (lineItem.key === key) {
                     if (field === "amount") {
-                        value = parseFloat(value);
+                        if (value !== '') {
+                            value = Number(value);
+                        }
                     }
                     lineItem[field] = value;
                     lineItem.validation = validateLineItem(lineItem);
@@ -93,13 +121,20 @@ class Invoice extends Component {
     }
 
     calculateTotal() {
-        return this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + parseFloat(t.amount), 0)
+        return this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + Number(t.amount), 0)
     }
 
     addLineItem() {
         this.setState({
             lineItems: [...this.state.lineItems, {
-                key: this.randomStr(), description: "", amount: 0.0
+                key: this.randomStr(), description: "", amount: "", error:
+                { description: "", amount: "" },
+                validation: {
+                    "validationStates":
+                    { amount: null, description: null },
+                    "validationMessages":
+                    { amount: "", description: "" }
+                }
             }]
         });
     }
@@ -110,7 +145,7 @@ class Invoice extends Component {
         });
     }
 
-    renderNameForm() {
+    renderNameFormGroup() {
         return (
             <FormGroup key="name" controlId="formHorizontalName" validationState={this.state.nameValidationState}>
                 <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>Name</Col>
@@ -122,7 +157,8 @@ class Invoice extends Component {
             </FormGroup>
         );
     }
-    renderEmailForm() {
+
+    renderEmailFormGroup() {
         return (
             <FormGroup key="email" controlId="formHorizontalEmail" validationState={this.state.emailValidationState}>
                 <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>Email</Col>
@@ -136,7 +172,21 @@ class Invoice extends Component {
             </FormGroup>
         );
     }
-
+    renderDueDateFormGroup() {
+        return (
+            <FormGroup key="dueDate" controlId="formHorizontalDueDate" validationState={this.state.dueDateValidationState}>
+                <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
+                    Due Date
+                        </Col>
+                <Col xs={10} sm={10} md={10} lg={10}>
+                    <FormControl type="date" placeholder="Due Date" value={this.state.dueDate}
+                        onChange={(e) => this.onChangeText("dueDate", validateDate, e.target.value)} />
+                    <FormControl.Feedback />
+                    <HelpBlock>{this.state.dueDateError}</HelpBlock>
+                </Col>
+            </FormGroup>
+        )
+    }
     renderLineItems() {
         return (
             this.state.lineItems.map(
@@ -157,19 +207,9 @@ class Invoice extends Component {
             <Grid>
                 <PageHeader>e-Invoice</PageHeader>
                 <Form horizontal>
-                    {this.renderNameForm()}
-                    {this.renderEmailForm()}
-                    <FormGroup key="dueDate" controlId="formHorizontalDueDate" validationState={this.state.dueDateValidationState}>
-                        <Col componentClass={ControlLabel} xs={2} sm={2} md={2} lg={2}>
-                            Due Date
-                        </Col>
-                        <Col xs={10} sm={10} md={10} lg={10}>
-                            <FormControl type="date" placeholder="Due Date" value={this.state.dueDate}
-                                onChange={(e) => this.onChangeText("dueDate", validateDate, e.target.value)} />
-                            <FormControl.Feedback />
-                            <HelpBlock>{this.state.dueDateError}</HelpBlock>
-                        </Col>
-                    </FormGroup>
+                    {this.renderNameFormGroup()}
+                    {this.renderEmailFormGroup()}
+                    {this.renderDueDateFormGroup()}
                     <Row>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Description</Col>
                         <Col componentClass={ControlLabel} sm={2} smOffset={3}>Amount</Col>
@@ -182,7 +222,7 @@ class Invoice extends Component {
                     </FormGroup>
                     <FormGroup>
                         <Col smOffset={10} sm={2}>
-                            <h3>Total: $ {this.calculateTotal()}</h3>
+                            <h3>Total: $ {this.calculateTotal().toFixed(2)}</h3>
                         </Col>
                     </FormGroup>
                     <FormGroup>

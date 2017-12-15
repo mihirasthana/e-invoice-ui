@@ -2,10 +2,14 @@ import React from 'react';
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 
 class NameAsyncTypeahead extends React.Component {
-    state = {
-        isLoading: false,
-        options: [],
-    };
+    constructor(props) {
+        super(props);
+        this.state = {
+            isLoading: false,
+            options: [],
+        };
+    }
+
 
     render() {
         return (
