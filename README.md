@@ -33,16 +33,15 @@ to be captured.
 
 - [X] Added ability to remove line items
 
-#### The following features/issues are being worked upon:
-- Clear form on Submit
-- Hash the name and email and store in DB
-- Disable submit button when invalid input
-- Disable submit button while submitting (to avoid sending mulitple invoices)
-- Form fields validations
+#### The following features/issues are being worked upon and are marked as [X] if completed:
+- [X] Clear form on Submit
+- [X] Disable submit button when invalid input
+- [X] Disable submit button while submitting (to avoid sending mulitple invoices)
+- [X] Form fields validations
 - Proptype validations
 - Typeahead Alignment
-- Typeahead Backend limit
-- Test Case 
+- [X] Typeahead Backend limit
+- Test Cases 
 
 ## Tools and Technology Stack
  **React.js  SpringBoot MySQL**
