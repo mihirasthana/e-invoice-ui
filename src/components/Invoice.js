@@ -41,6 +41,7 @@ class Invoice extends Component {
         this.setState({
             dueDate: "",
             lineItems: [{ key: this.randomStr(), description: "", "amount": 0.0 }],
+
         })
     }
 
@@ -88,11 +89,11 @@ class Invoice extends Component {
     }
 
     randomStr() {
-        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     }
 
     calculateTotal() {
-        this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + parseFloat(t.amount), 0)
+        return this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + parseFloat(t.amount), 0)
     }
 
     addLineItem() {
