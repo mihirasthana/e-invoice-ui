@@ -63,7 +63,7 @@ class Invoice extends Component {
                 lineItems: this.state.lineItems
             })
         })
-            .then(resp => {
+            .then(() => {
                 this.clearForm()
                 alert("Success!!");
 
@@ -87,8 +87,13 @@ class Invoice extends Component {
         })
     }
 
-    randomStr = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    calculateTotal = () => this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + parseFloat(t.amount), 0)
+    randomStr() {
+        Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+
+    calculateTotal() {
+        this.state.lineItems.filter(isLineItemValid).reduce((p, t) => p + parseFloat(t.amount), 0)
+    }
 
     addLineItem() {
         this.setState({
